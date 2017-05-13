@@ -9,10 +9,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-public class FPTree {
+public class FPGrowth {
     private int minSupport;//最小支持度
 
-    public FPTree(int support) {
+    public FPGrowth(int support) {
         this.minSupport = support;
     }
 
