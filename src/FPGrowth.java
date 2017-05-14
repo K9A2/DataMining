@@ -35,11 +35,13 @@ public class FPGrowth {
         return transactions;
     }
 
-    public void FPGrowth(List<List<String>> transactions, List<String> postPattern) {
+    public void FPGrowth(List<List<String>> transactions, List<String> postPattern, List<StringBuilder> result) {
         //构建头项表
         List<TNode> headerTable = buildHeaderTable(transactions);
         //构建FP树
         TNode tree = bulidFPTree(headerTable, transactions);
+        //当前行
+        StringBuilder currentLine = new StringBuilder();
         //当树为空时退出
         if (tree.getChildren() == null || tree.getChildren().size() == 0) {
             return;
@@ -48,10 +50,15 @@ public class FPGrowth {
         if (postPattern != null) {
             for (TNode head : headerTable) {
                 System.out.print(head.getCount() + " " + head.getItemName());
+                //currentLine.append(head.getCount() + " " + head.getItemName());
                 for (String item : postPattern) {
                     System.out.print(" " + item);
+                    //currentLine.append(" " + item);
                 }
                 System.out.println();
+                if (currentLine != null) {
+                    //result.add(currentLine);
+                }
             }
         }
         //遍历每一个头项表节点
@@ -82,7 +89,7 @@ public class FPGrowth {
                 nextnode = nextnode.getNext();
             }
             //每个头项表节点重复上述所有操作，递归
-            FPGrowth(newTransaction, newPostPattern);
+            FPGrowth(newTransaction, newPostPattern, result);
         }
     }
 

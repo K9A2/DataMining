@@ -1,5 +1,6 @@
 import javax.swing.*;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -13,9 +14,24 @@ import java.util.List;
 public class Main {
 
     public static void main(String[] args) {
-//        FPGrowth fpGrowth = new FPGrowth(4);
-//        List<List<String>> transactions = fpGrowth.loadTransaction("D:\\test.txt");
-//        fpGrowth.FPGrowth(transactions, null);
+
+        List<StringBuilder> result = new ArrayList<>();
+
+        FPGrowth fpGrowth = new FPGrowth(4);
+        List<List<String>> transactions = fpGrowth.loadTransaction("D:\\test.txt");
+        fpGrowth.FPGrowth(transactions, null, result);
+
+//        System.out.println();
+//
+//        if (result.size() != 0) {
+//            for (StringBuilder row :
+//                    result) {
+//                System.out.println(row.toString());
+//            }
+//        } else {
+//            System.out.println("Found nothing.");
+//        }
+
 
 //        // 创建 JFrame 实例
 //        JFrame frame = new JFrame("Login Example");
@@ -38,12 +54,12 @@ public class Main {
 //        // 设置界面可见
 //        frame.setVisible(true);
 
-        //todo: 改写为 GUI 窗口程序
-        JFileChooser fd = new JFileChooser();
-//fd.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        fd.showDialog(new JLabel(), "选择文件");
-        File f = fd.getSelectedFile();
-        if(f != null){}
+//        //todo: 改写为 GUI 窗口程序
+//        JFileChooser fd = new JFileChooser();
+////fd.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+//        fd.showDialog(new JLabel(), "选择文件");
+//        File f = fd.getSelectedFile();
+//        if(f != null){}
 
     }
 
@@ -60,19 +76,19 @@ public class Main {
          * setBounds(x, y, width, height)
          * x 和 y 指定左上角的新位置，由 width 和 height 指定新的大小。
          */
-        userLabel.setBounds(10,20,80,25);
+        userLabel.setBounds(10, 20, 80, 25);
         panel.add(userLabel);
 
         /*
          * 创建文本域用于用户输入
          */
         JTextField userText = new JTextField(20);
-        userText.setBounds(100,20,165,25);
+        userText.setBounds(100, 20, 165, 25);
         panel.add(userText);
 
         // 输入密码的文本域
         JLabel passwordLabel = new JLabel("Password:");
-        passwordLabel.setBounds(10,50,80,25);
+        passwordLabel.setBounds(10, 50, 80, 25);
         panel.add(passwordLabel);
 
         /*
@@ -80,7 +96,7 @@ public class Main {
          * 但是输入的信息会以点号代替，用于包含密码的安全性
          */
         JPasswordField passwordText = new JPasswordField(20);
-        passwordText.setBounds(100,50,165,25);
+        passwordText.setBounds(100, 50, 165, 25);
         panel.add(passwordText);
 
         // 创建登录按钮
