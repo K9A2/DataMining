@@ -15,11 +15,14 @@ class FPGrowth {
     /**
      * 加载事务集
      *
-     * @param file 文件路径名
+     * @param file      文件路径名
      * @param separator 各项的分隔符
      */
     List<List<String>> loadTransactions(String file, String separator) {
+        //事务集
         List<List<String>> transactions = new ArrayList<>();
+
+        //从事务集文件中按行读取数据，并按照约定的分隔符组成数组，以存储到事务集 List 中
         try {
             BufferedReader br = new BufferedReader(new FileReader(new File(file)));
             String line;
@@ -29,19 +32,55 @@ class FPGrowth {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         return transactions;
     }
 
     /**
+     * 构建头项表，按递减排好序
      *
+     * @return
+     */
+    private List<TNode> buildHeaderTable(List<List<String>> transactions) {
+        //大于最小支持度的节点 List
+        List<TNode> headers = new ArrayList<>();
+        //节点名称和节点实体的键值对
+        Map<String, TNode> nodeMap = new HashMap<>();
+
+        //为每一个item构建一个节点
+        for (List<String> line : transactions) {
+            for (String itemName : line) {
+                if (nodeMap.keySet().contains(itemName)) {
+                    nodeMap.get(itemName).increaseCount(1);
+                } else {
+                    nodeMap.put(itemName, new TNode(itemName));
+                }
+            }
+        }
+
+        //筛选满足最小支持度的节点
+        for (TNode item : nodeMap.values()) {
+            if (item.getCount() >= minSupport) {
+                headers.add(item);
+            }
+        }
+
+        //按count值从高到低排序
+        Collections.sort(headers);
+
+        return headers;
+    }
+
+    /**
      * FP-Growth 核心算法
      *
-     * @param transactions 事物集
-     * @param postPattern 模式
-     * @param result 结果
+     * @param transactions 事务集
+     * @param postPattern  模式
+     * @param result       结果
      */
     void FPGrowth(List<List<String>> transactions, List<String> postPattern, List<StringBuilder> result) {
         //构建头项表
+        //todo: 确认是否每一次都要 build 一次 HeaderTable
         List<TNode> headerTable = buildHeaderTable(transactions);
         //构建FP树
         TNode tree = bulidFPTree(headerTable, transactions);
@@ -95,38 +134,6 @@ class FPGrowth {
             //每个头项表节点重复上述所有操作，递归
             FPGrowth(newTransaction, newPostPattern, result);
         }
-    }
-
-    /**
-     * 构建头项表，按递减排好序
-     *
-     * @return
-     */
-    public List<TNode> buildHeaderTable(List<List<String>> transactions) {
-        List<TNode> list = new ArrayList<TNode>();
-        Map<String, TNode> nodesmap = new HashMap<String, TNode>();
-        //为每一个item构建一个节点
-        for (List<String> lines : transactions) {
-            for (int i = 0; i < lines.size(); ++i) {
-                String itemName = lines.get(i);
-                if (!nodesmap.keySet().contains(itemName)) //为item构建节点
-                {
-                    nodesmap.put(itemName, new TNode(itemName));
-                } else //若已经构建过该节点，出现次数加1
-                {
-                    nodesmap.get(itemName).increaseCount(1);
-                }
-            }
-        }
-        //筛选满足最小支持度的item节点
-        for (TNode item : nodesmap.values()) {
-            if (item.getCount() >= minSupport) {
-                list.add(item);
-            }
-        }
-        //按count值从高到低排序
-        Collections.sort(list);
-        return list;
     }
 
     /**

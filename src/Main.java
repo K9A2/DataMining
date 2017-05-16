@@ -14,18 +14,25 @@ public class Main {
 
     public static void main(String[] args) {
 
+        //默认文件位置
         String txtFilePath = "D:\\test.txt";
 
+        //分隔符
         String separator = " ";
 
+        //频繁项中间结果
         List<StringBuilder> result = new ArrayList<>();
 
+        /*
+        FP-Growth 算法处理
+         */
         FPGrowth fpGrowth = new FPGrowth(2);
         List<List<String>> transactions = fpGrowth.loadTransactions(txtFilePath, separator);
         fpGrowth.FPGrowth(transactions, null, result);
 
         //System.out.println();
 
+        //结果输出
         if (result.size() != 0) {
             for (StringBuilder row :
                     result) {
