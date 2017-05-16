@@ -1,33 +1,30 @@
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-public class FPGrowth {
-    private int minSupport;//最小支持度
+class FPGrowth {
 
-    public FPGrowth(int support) {
+    //最小支持度
+    private int minSupport;
+
+    FPGrowth(int support) {
         this.minSupport = support;
     }
 
     /**
-     * 加载事务数据库
+     * 加载事务集
      *
-     * @param file 文件路径名  文件中每行item由空格分隔
+     * @param file 文件路径名
+     * @param separator 各项的分隔符
      */
-    public List<List<String>> loadTransaction(String file) {
-        List<List<String>> transactions = new ArrayList<List<String>>();
+    List<List<String>> loadTransactions(String file, String separator) {
+        List<List<String>> transactions = new ArrayList<>();
         try {
             BufferedReader br = new BufferedReader(new FileReader(new File(file)));
-            String line = "";
+            String line;
             while ((line = br.readLine()) != null) {
-                transactions.add(Arrays.asList(line.split(" ")));
+                transactions.add(Arrays.asList(line.split(separator)));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -35,7 +32,15 @@ public class FPGrowth {
         return transactions;
     }
 
-    public void FPGrowth(List<List<String>> transactions, List<String> postPattern, List<StringBuilder> result) {
+    /**
+     *
+     * FP-Growth 核心算法
+     *
+     * @param transactions 事物集
+     * @param postPattern 模式
+     * @param result 结果
+     */
+    void FPGrowth(List<List<String>> transactions, List<String> postPattern, List<StringBuilder> result) {
         //构建头项表
         List<TNode> headerTable = buildHeaderTable(transactions);
         //构建FP树
@@ -49,16 +54,15 @@ public class FPGrowth {
         //输出频繁项集
         if (postPattern != null) {
             for (TNode head : headerTable) {
-                System.out.print(head.getCount() + " " + head.getItemName());
-                //currentLine.append(head.getCount() + " " + head.getItemName());
+                currentLine.delete(0, currentLine.length());
+//                System.out.print(head.getCount() + " " + head.getItemName());
+                currentLine.append(head.getCount()).append(" ").append(head.getItemName());
                 for (String item : postPattern) {
-                    System.out.print(" " + item);
-                    //currentLine.append(" " + item);
+//                    System.out.print(" " + item);
+                    currentLine.append(" ").append(item);
                 }
-                System.out.println();
-                if (currentLine != null) {
-                    //result.add(currentLine);
-                }
+//                System.out.println();
+                result.add(currentLine);
             }
         }
         //遍历每一个头项表节点

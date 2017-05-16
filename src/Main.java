@@ -1,5 +1,4 @@
 import javax.swing.*;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,22 +14,26 @@ public class Main {
 
     public static void main(String[] args) {
 
+        String txtFilePath = "D:\\test.txt";
+
+        String separator = " ";
+
         List<StringBuilder> result = new ArrayList<>();
 
-        FPGrowth fpGrowth = new FPGrowth(4);
-        List<List<String>> transactions = fpGrowth.loadTransaction("D:\\test.txt");
+        FPGrowth fpGrowth = new FPGrowth(2);
+        List<List<String>> transactions = fpGrowth.loadTransactions(txtFilePath, separator);
         fpGrowth.FPGrowth(transactions, null, result);
 
-//        System.out.println();
-//
-//        if (result.size() != 0) {
-//            for (StringBuilder row :
-//                    result) {
-//                System.out.println(row.toString());
-//            }
-//        } else {
-//            System.out.println("Found nothing.");
-//        }
+        //System.out.println();
+
+        if (result.size() != 0) {
+            for (StringBuilder row :
+                    result) {
+                System.out.println(row.toString());
+            }
+        } else {
+            System.out.println("Found nothing.");
+        }
 
 
 //        // 创建 JFrame 实例
