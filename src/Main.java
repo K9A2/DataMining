@@ -1,5 +1,10 @@
 import javax.swing.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -14,14 +19,56 @@ public class Main {
 
     public static void main(String[] args) {
 
-        //默认文件位置
+        //默认文本输入文件位置
         String txtFilePath = "D:\\test.txt";
 
+        //默认 CSV 文件输入位置
+        String csvFilePath = "D:\\test.csv";
+
+        //默认书名字典位置
+        String dictionaryFilePath = "D:\\dictionary.xlsx";
+
+        //数据在 Excel 文件中的第几个 sheet，从 0 开始
+        int sheetIndex = 0;
+
         //分隔符
-        String separator = " ";
+        String separator = ",";
 
         //频繁项中间结果
         List<StringBuilder> result = new ArrayList<>();
+
+        //Excel 输入结果
+        List<List<String>> csvInput = new ArrayList<>();
+
+        /*
+        预处理
+         */
+        //读取 CSV 文件，构建原始输入
+        File csvFile = new File(csvFilePath);
+
+        if (!csvFile.exists() || !csvFile.isFile()) {
+            System.out.println("无法读取指定文件，程序退出");
+            return;
+        }
+
+        //按文本文件的方式读取 CSV 文件
+        try {
+            String line;
+            BufferedReader reader = new BufferedReader(new FileReader(txtFilePath));
+            while ((line = reader.readLine()) != null) {
+                csvInput.add(Arrays.asList(line.split(separator)));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
+
+        //去除只有一项的行，然后合并属于同一次借书操作的连续几行记录
+        List<String> merged = new ArrayList<>();
+        for (List<String> row :
+                csvInput) {
+            merged.add(row.get(0));
+        }
 
         /*
         FP-Growth 算法处理
@@ -30,7 +77,9 @@ public class Main {
         List<List<String>> transactions = fpGrowth.loadTransactions(txtFilePath, separator);
         fpGrowth.FPGrowth(transactions, null, result);
 
-        //System.out.println();
+        /*
+        再处理
+         */
 
         //结果输出
         if (result.size() != 0) {

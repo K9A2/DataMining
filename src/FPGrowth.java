@@ -97,15 +97,15 @@ class FPGrowth {
         //输出频繁项集
         if (postPattern != null) {
             for (TNode head : headerTable) {
-                //currentLine.delete(0, currentLine.length());
-                System.out.print(head.getCount() + " " + head.getItemName());
-                //currentLine.append(head.getCount()).append(" ").append(head.getItemName());
+                currentLine.delete(0, currentLine.length());
+                //System.out.print(head.getCount() + " " + head.getItemName());
+                currentLine.append(head.getCount()).append(" ").append(head.getItemName());
                 for (String item : postPattern) {
-                    System.out.print(" " + item);
-                    //currentLine.append(" ").append(item);
+                    //System.out.print(" " + item);
+                    currentLine.append(" ").append(item);
                 }
-                System.out.println();
-                //result.add(currentLine);
+                //System.out.println();
+                result.add(currentLine);
             }
         }
         //遍历每一个头项表节点
@@ -141,7 +141,7 @@ class FPGrowth {
     }
 
     /**
-     * 构建FP-Tree
+     * 构建 FP-Tree
      *
      * @param headerTable 头项表
      * @return
@@ -150,48 +150,49 @@ class FPGrowth {
         //todo: 确认此方法的执行结果是否唯一
         //FP 树根节点
         TNode rootNode = new TNode();
+        //对事务集中的每一行均构建一棵 FP 树
         for (List<String> items : transactions) {
             LinkedList<String> itemsDesc = sortItemsByDesc(items, headerTable);
             //寻找添加itemsDesc为子树的父节点
-            TNode subtreeRoot = rootNode;
-            if (subtreeRoot.getChildren().size() != 0) {
-                TNode tempNode = subtreeRoot.findChildren(itemsDesc.peek());
+            TNode subTreeRoot = rootNode;
+            if (subTreeRoot.getChildren().size() != 0) {
+                TNode tempNode = subTreeRoot.findChildren(itemsDesc.peek());
                 while (!itemsDesc.isEmpty() && tempNode != null) {
                     tempNode.increaseCount(1);
-                    subtreeRoot = tempNode;
+                    subTreeRoot = tempNode;
                     itemsDesc.poll();
-                    tempNode = subtreeRoot.findChildren(itemsDesc.peek());
+                    tempNode = subTreeRoot.findChildren(itemsDesc.peek());
                 }
             }
             //将itemsDesc中剩余的节点加入作为subtreeRoot的子树
-            addSubTree(headerTable, subtreeRoot, itemsDesc);
+            addSubTree(headerTable, subTreeRoot, itemsDesc);
         }
         return rootNode;
     }
 
     /**
-     * @param headertable 头项表
+     * @param headerTable 头项表
      * @param subtreeRoot 子树父节点
      * @param itemsDesc   被添加的子树
      */
-    private void addSubTree(List<TNode> headertable, TNode subtreeRoot, LinkedList<String> itemsDesc) {
+    private void addSubTree(List<TNode> headerTable, TNode subtreeRoot, LinkedList<String> itemsDesc) {
         if (itemsDesc.size() > 0) {
-            TNode thisnode = new TNode(itemsDesc.pop());//构建新节点
-            subtreeRoot.getChildren().add(thisnode);
-            thisnode.setParent(subtreeRoot);
-            //将thisnode加入头项表对应节点链表的末尾
-            for (TNode node : headertable) {
-                if (node.getItemName().equals(thisnode.getItemName())) {
+            TNode thisNode = new TNode(itemsDesc.pop());//构建新节点
+            subtreeRoot.getChildren().add(thisNode);
+            thisNode.setParent(subtreeRoot);
+            //将 thisNode 加入头项表对应节点链表的末尾
+            for (TNode node : headerTable) {
+                if (node.getItemName().equals(thisNode.getItemName())) {
                     TNode lastNode = node;
                     while (lastNode.getNext() != null) {
                         lastNode = lastNode.getNext();
                     }
-                    lastNode.setNext(thisnode);
+                    lastNode.setNext(thisNode);
                 }
             }
-            subtreeRoot = thisnode;//更新父节点为当前节点
+            subtreeRoot = thisNode;//更新父节点为当前节点
             //递归添加剩余的items
-            addSubTree(headertable, subtreeRoot, itemsDesc);
+            addSubTree(headerTable, subtreeRoot, itemsDesc);
         }
     }
 
@@ -206,13 +207,17 @@ class FPGrowth {
         //以降序排列的 items
         LinkedList<String> itemsDesc = new LinkedList<>();
 
-        //
+        /*
+        在从大到小排序的 headerTable 中从头到尾扫描，如果此值包含在需要排序的 items 中，那么
+        则在返回的结果集中添加此节点
+         */
         for (TNode node : headerTable) {
             if (items.contains(node.getItemName())) {
                 itemsDesc.add(node.getItemName());
             }
         }
 
+        //以降序排列的结果集
         return itemsDesc;
     }
 
