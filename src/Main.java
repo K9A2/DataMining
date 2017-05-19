@@ -53,6 +53,28 @@ public class Main {
             System.out.println("预处理结束，开始 FP-Growth 过程");
         }
 
+        String preprocessFilePath = "D:\\preProcess.txt";
+        File preprocess = new File(preprocessFilePath);
+        System.out.println("处理完成，开始输出结果");
+        if (fpInput.size() != 0) {
+            try {
+                preprocess.createNewFile();
+                BufferedWriter writer = new BufferedWriter(new FileWriter(preprocess));
+                for (List<String> line : fpInput) {
+                    for (String item : line) {
+                        writer.write(item + " ");
+                    }
+                    writer.newLine();
+                }
+                writer.flush();
+                writer.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("Found nothing.");
+        }
+
         /*
         FP-Growth 算法处理
          */
@@ -60,6 +82,25 @@ public class Main {
         //List<List<String>> transactions = fpGrowth.loadTransactions("D:\\test.txt", " ");
         //fpGrowth.FPGrowth(transactions, null, fpOutput);
         fpGrowth.FPGrowth(fpInput, null, fpOutput);
+
+        String fpFilePath = "D:\\fpOutput.txt";
+        File fp = new File(fpFilePath);
+        System.out.println("处理完成，开始输出结果");
+        if (fpOutput.size() != 0) {
+            try {
+                fp.createNewFile();
+                BufferedWriter writer = new BufferedWriter(new FileWriter(fp));
+                for (StringBuilder line : fpOutput) {
+                    writer.write(line.toString() + "\n");
+                }
+                writer.flush();
+                writer.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("Found nothing.");
+        }
 
         /*
         再处理过程
