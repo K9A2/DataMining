@@ -12,6 +12,7 @@ import java.util.*;
 public class Main {
 
     //todo: 改写为 GUI 程序
+    //todo: 在每一步添加时间戳
     public static void main(String[] args) {
 
         //默认文本输入文件位置
@@ -27,10 +28,13 @@ public class Main {
         int sheetIndex = 0;
 
         //分隔符
-        String separator = ",";
+        String inputSeparator = ",";
+
+        //FP-Growth 输出分隔符
+        String fpSeperator = " ";
 
         //频繁项中间结果
-        List<StringBuilder> result = new ArrayList<>();
+        List<StringBuilder> fpOutput = new ArrayList<>();
 
         //Excel 输入结果
         List<List<String>> csvInput = new ArrayList<>();
@@ -52,7 +56,7 @@ public class Main {
             String line;
             BufferedReader reader = new BufferedReader(new FileReader(csvFile));
             while ((line = reader.readLine()) != null) {
-                csvInput.add(Arrays.asList(line.split(separator)));
+                csvInput.add(Arrays.asList(line.split(inputSeparator)));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -91,34 +95,13 @@ public class Main {
 
         System.out.println("预处理结束，开始 FP-Growth 过程");
 
-//        String outputFilePath = "D:\\output.txt";
-//        File outputFile = new File(outputFilePath);
-//        try {
-//            outputFile.createNewFile();
-//            BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
-//
-//            for (List<String> row : FPInput) {
-//                for (String item : row) {
-//                    writer.write(item + " ");
-//                }
-//                writer.write("\n");
-//            }
-//
-//            writer.flush();
-//            writer.close();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-
-
-
         /*
         FP-Growth 算法处理
          */
         FPGrowth fpGrowth = new FPGrowth(4);
         List<List<String>> transactions = fpGrowth.loadTransactions("D:\\test.txt", " ");
-        fpGrowth.FPGrowth(transactions, null, result);
-        //fpGrowth.FPGrowth(FPInput, null, result);
+        fpGrowth.FPGrowth(transactions, null, fpOutput);
+        //fpGrowth.FPGrowth(FPInput, null, fpOutput);
 
         /*
         再处理
@@ -145,17 +128,41 @@ public class Main {
         //去除前缀以及逆序后的结果
         List<List<String>> reverse = new ArrayList<>();
 
-
+        for (StringBuilder line : fpOutput) {
+            List<String> lineList = Arrays.asList(line.substring(line.indexOf("b"), line.length()).split(fpSeperator));
+            Collections.sort(lineList);
+            reverse.add(lineList);
+        }
 
         //结果输出
-        System.out.println("处理完成，开始输出结果");
-        if (result.size() != 0) {
-            for (StringBuilder row :
-                    result) {
-                System.out.println(row.toString());
+//        System.out.println("处理完成，开始输出结果");
+//        if (fpOutput.size() != 0) {
+//            for (StringBuilder row : fpOutput) {
+//                System.out.println(row.toString());
+//            }
+//        } else {
+//            System.out.println("Found nothing.");
+//        }
+
+        //输出读取到的 CSV 文件数据
+        String outputFilePath = "D:\\output.txt";
+        File outputFile = new File(outputFilePath);
+        try {
+            outputFile.createNewFile();
+            BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
+
+            for (List<String> line : reverse) {
+                for (String item :
+                        line) {
+                    writer.write(item + " ");
+                }
+                writer.write(line.toString() + "\n");
             }
-        } else {
-            System.out.println("Found nothing.");
+
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
         System.out.println("输出完成，程序结束");
