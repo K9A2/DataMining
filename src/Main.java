@@ -36,18 +36,96 @@ public class Main {
         //频繁项中间结果
         List<StringBuilder> fpOutput = new ArrayList<>();
 
-        //Excel 输入结果
-        List<List<String>> csvInput = new ArrayList<>();
+        //CSV 输入结果
+        List<List<String>> fpInput;
 
+        //最终结果
+        List<List<String>> result = null;
+
+        /*
+        预处理过程
+         */
+        if ((fpInput = preProcess(csvFilePath, inputSeparator)) == null) {
+            //返回值为 null，则表明此 CSV 文件存在问题
+            System.out.println("无法获取 CSV 输入，程序退出");
+            return;
+        } else {
+            System.out.println("预处理结束，开始 FP-Growth 过程");
+        }
+
+        /*
+        FP-Growth 算法处理
+         */
+        FPGrowth fpGrowth = new FPGrowth(4);
+        //List<List<String>> transactions = fpGrowth.loadTransactions("D:\\test.txt", " ");
+        //fpGrowth.FPGrowth(transactions, null, fpOutput);
+        fpGrowth.FPGrowth(fpInput, null, fpOutput);
+
+        /*
+        再处理过程
+         */
+        result = reProcess(dictionaryFilePath, fpSeperator, fpOutput);
+
+        //结果输出
+        String outputFilePath = "D:\\output.txt";
+        File outputFile = new File(outputFilePath);
+        System.out.println("处理完成，开始输出结果");
+        if (result.size() != 0) {
+            try {
+                outputFile.createNewFile();
+                BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
+                for (List<String> line : result) {
+                    for (String item : line) {
+                        writer.write(item + "，");
+                    }
+                    writer.write("\n");
+                }
+                writer.flush();
+                writer.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("Found nothing.");
+        }
+
+        System.out.println("输出完成，程序结束");
+
+        //输出读取到的 CSV 文件数据
+//        String outputFilePath = "D:\\output.txt";
+//        File outputFile = new File(outputFilePath);
+//        try {
+//            outputFile.createNewFile();
+//            BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
+//
+//            for (List<String> line : reverse) {
+//                for (String item :
+//                        line) {
+//                    writer.write(item + " ");
+//                }
+//                writer.write(line.toString() + "\n");
+//            }
+//
+//            writer.flush();
+//            writer.close();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+    }
+
+    private static List<List<String>> preProcess(String csvFilePath, String inputSeparator) {
         /*
         预处理
          */
+
+        List<List<String>> csvInput = new ArrayList<>();
+
         //读取 CSV 文件，构建原始输入
         File csvFile = new File(csvFilePath);
 
         if (!csvFile.exists() || !csvFile.isFile()) {
             System.out.println("无法读取指定文件，程序退出");
-            return;
+            return null;
         }
 
         //按文本文件的方式读取 CSV 文件
@@ -60,7 +138,7 @@ public class Main {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return;
+            return null;
         }
 
         //去除只有一项的行，然后合并属于同一次借书操作的连续几行记录
@@ -93,19 +171,17 @@ public class Main {
             }
         }
 
-        System.out.println("预处理结束，开始 FP-Growth 过程");
+        return FPInput;
 
-        /*
-        FP-Growth 算法处理
-         */
-        FPGrowth fpGrowth = new FPGrowth(4);
-        List<List<String>> transactions = fpGrowth.loadTransactions("D:\\test.txt", " ");
-        fpGrowth.FPGrowth(transactions, null, fpOutput);
-        //fpGrowth.FPGrowth(FPInput, null, fpOutput);
+    }
 
+    private static List<List<String>> reProcess(String dictionaryFilePath, String fpSeperator, List<StringBuilder> fpOutput) {
         /*
         再处理
          */
+
+        List<List<String>> result = new ArrayList<>();
+
         //制作字典
         Dictionary<String, String> dictionary = new Hashtable<>();
 
@@ -120,7 +196,7 @@ public class Main {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return;
+            return null;
         }
         //以文件流的形式读取 CSV 文件时，会把标题行读出来，所以需要去除
         dictionary.remove("图书记录号（种）");
@@ -134,39 +210,35 @@ public class Main {
             reverse.add(lineList);
         }
 
-        //结果输出
-//        System.out.println("处理完成，开始输出结果");
-//        if (fpOutput.size() != 0) {
-//            for (StringBuilder row : fpOutput) {
-//                System.out.println(row.toString());
-//            }
-//        } else {
-//            System.out.println("Found nothing.");
-//        }
+        //去重
+        //todo: 这一步有问题
+        List<String> row = new ArrayList<>();
+        HashSet<String> hashSet;
 
-        //输出读取到的 CSV 文件数据
-        String outputFilePath = "D:\\output.txt";
-        File outputFile = new File(outputFilePath);
-        try {
-            outputFile.createNewFile();
-            BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
-
-            for (List<String> line : reverse) {
-                for (String item :
-                        line) {
-                    writer.write(item + " ");
+        for (int i = 0; i < reverse.size(); i++) {
+            row.addAll(reverse.get(i));
+            for (int j = i; j < reverse.size(); j++) {
+                if (Objects.equals(reverse.get(i).get(0), reverse.get(j).get(0))) {
+                    row.addAll(reverse.get(j));
+                } else {
+                    i = j - 1;
+                    hashSet = new HashSet<>(row);
+                    result.add(new ArrayList<>(hashSet));
+                    row.clear();
+                    hashSet.clear();
+                    break;
                 }
-                writer.write(line.toString() + "\n");
             }
-
-            writer.flush();
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
         }
 
-        System.out.println("输出完成，程序结束");
+        //替换
+        for (List<String> line : result) {
+            for (int i = 0; i < line.size(); i++) {
+                line.set(i, dictionary.get(line.get(i)));
+            }
+        }
 
+        return result;
     }
 
 }
