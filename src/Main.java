@@ -45,44 +45,21 @@ public class Main {
         /*
         预处理过程
          */
-        if ((fpInput = preProcess(csvFilePath, inputSeparator)) == null) {
-            //返回值为 null，则表明此 CSV 文件存在问题
-            System.out.println("无法获取 CSV 输入，程序退出");
-            return;
-        } else {
-            System.out.println("预处理结束，开始 FP-Growth 过程");
-        }
-
-        String preprocessFilePath = "D:\\preProcess.txt";
-        File preprocess = new File(preprocessFilePath);
-        System.out.println("处理完成，开始输出结果");
-        if (fpInput.size() != 0) {
-            try {
-                preprocess.createNewFile();
-                BufferedWriter writer = new BufferedWriter(new FileWriter(preprocess));
-                for (List<String> line : fpInput) {
-                    for (String item : line) {
-                        writer.write(item + " ");
-                    }
-                    writer.newLine();
-                }
-                writer.flush();
-                writer.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } else {
-            System.out.println("Found nothing.");
-        }
+        fpInput = preProcess(csvFilePath, inputSeparator);
 
         /*
         FP-Growth 算法处理
          */
         FPGrowth fpGrowth = new FPGrowth(4);
-        //List<List<String>> transactions = fpGrowth.loadTransactions("D:\\test.txt", " ");
-        //fpGrowth.FPGrowth(transactions, null, fpOutput);
+        //List<List<String>> transactions = fpGrowth.loadTransaction("D:\\preProcess.txt");
         fpGrowth.FPGrowth(fpInput, null, fpOutput);
+        //fpGrowth.FPGrowth(fpInput, null, fpOutput);
 
+        for (StringBuilder line : fpOutput) {
+            System.out.println(line.toString());
+        }
+
+        /*
         String fpFilePath = "D:\\fpOutput.txt";
         File fp = new File(fpFilePath);
         System.out.println("处理完成，开始输出结果");
@@ -105,6 +82,17 @@ public class Main {
         /*
         再处理过程
          */
+
+//        try {
+//            String line;
+//            BufferedReader reader = new BufferedReader(new FileReader("D:\\temp.txt"));
+//            while ((line = reader.readLine()) != null) {
+//                fpOutput.add(new StringBuilder(line));
+//            }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+/*
         result = reProcess(dictionaryFilePath, fpSeperator, fpOutput);
 
         //结果输出
@@ -131,7 +119,7 @@ public class Main {
         }
 
         System.out.println("输出完成，程序结束");
-
+*/
         //输出读取到的 CSV 文件数据
 //        String outputFilePath = "D:\\output.txt";
 //        File outputFile = new File(outputFilePath);
@@ -154,10 +142,13 @@ public class Main {
 //        }
     }
 
+    /**
+     * 预处理方法。负责把提供原数据的 csv 文件处理成这个 FP-Growth 算法可以处理的格式。
+     * @param csvFilePath 数据源 csv 文件路径
+     * @param inputSeparator csv 文件中的分隔符
+     * @return 可用于 FP-Growth 算法的输入结果
+     */
     private static List<List<String>> preProcess(String csvFilePath, String inputSeparator) {
-        /*
-        预处理
-         */
 
         List<List<String>> csvInput = new ArrayList<>();
 
@@ -204,24 +195,37 @@ public class Main {
             i = j;
             if (merged.size() == 1) {
                 merged.clear();
-            } else {
-                Collections.sort(merged);
-                //note: add() 是否是引用式的添加，还是复制式的添加？
-                FPInput.add(new ArrayList<>(merged));
-                merged.clear();
             }
+            Collections.sort(merged);
+            //note: add() 是否是引用式的添加，还是复制式的添加？
+            FPInput.add(new ArrayList<>(merged));
+            merged.clear();
         }
 
         return FPInput;
 
     }
 
+    /**
+     * 再处理方法。负责把 FP-Growth 算法输出的数据重整为人类可以阅读的频繁项集。
+     * @param dictionaryFilePath 字典文件路径
+     * @param fpSeperator   FP-Growth 输出中的分隔符
+     * @param fpOutput FP-Growth 的输出结果
+     * @return 再处理结果，可以直接输出
+     */
     private static List<List<String>> reProcess(String dictionaryFilePath, String fpSeperator, List<StringBuilder> fpOutput) {
-        /*
-        再处理
-         */
 
         List<List<String>> result = new ArrayList<>();
+
+        //去除前缀以及逆序后的结果
+        List<List<String>> reverse = new ArrayList<>();
+
+        for (StringBuilder line : fpOutput) {
+            List<String> lineList = Arrays.asList(line.toString().substring(line.toString().indexOf("b")).split(fpSeperator));
+            //Collections.sort(lineList);
+            Collections.reverse(lineList);
+            reverse.add(lineList);
+        }
 
         //制作字典
         Dictionary<String, String> dictionary = new Hashtable<>();
@@ -239,26 +243,18 @@ public class Main {
             e.printStackTrace();
             return null;
         }
+
         //以文件流的形式读取 CSV 文件时，会把标题行读出来，所以需要去除
         dictionary.remove("图书记录号（种）");
 
-        //去除前缀以及逆序后的结果
-        List<List<String>> reverse = new ArrayList<>();
 
-        for (StringBuilder line : fpOutput) {
-            List<String> lineList = Arrays.asList(line.substring(line.indexOf("b"), line.length()).split(fpSeperator));
-            Collections.sort(lineList);
-            reverse.add(lineList);
-        }
-
-        //去重
-        //todo: 这一步有问题
+        //合并与去重
         List<String> row = new ArrayList<>();
-        HashSet<String> hashSet;
+        HashSet<String> hashSet = null;
 
         for (int i = 0; i < reverse.size(); i++) {
             row.addAll(reverse.get(i));
-            for (int j = i; j < reverse.size(); j++) {
+            for (int j = i + 1; j < reverse.size(); j++) {
                 if (Objects.equals(reverse.get(i).get(0), reverse.get(j).get(0))) {
                     row.addAll(reverse.get(j));
                 } else {
@@ -278,6 +274,30 @@ public class Main {
                 line.set(i, dictionary.get(line.get(i)));
             }
         }
+
+
+//        List<List<String>> temp = new ArrayList<>();
+//
+//        row.clear();
+//        if (hashSet != null) {
+//            hashSet.clear();
+//        }
+//
+//        for (int i = 0; i < result.size(); i++) {
+//            row.addAll(result.get(i));
+//            for (int j = i + 1; j < result.size(); j++) {
+//                if (Objects.equals(result.get(i).get(0), result.get(j).get(0))) {
+//                    row.addAll(result.get(j));
+//                } else {
+//                    i = j - 1;
+//                    hashSet = new HashSet<>(row);
+//                    temp.add(new ArrayList<>(hashSet));
+//                    row.clear();
+//                    hashSet.clear();
+//                    break;
+//                }
+//            }
+//        }
 
         return result;
     }
