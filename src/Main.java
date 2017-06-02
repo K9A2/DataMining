@@ -1,3 +1,6 @@
+import com.stormlin.fpgrowth.FPGrowth;
+import org.jetbrains.annotations.Nullable;
+
 import java.io.*;
 import java.util.*;
 
@@ -11,27 +14,25 @@ import java.util.*;
 
 public class Main {
 
-    //todo: 改写为 GUI 程序
-    //todo: 在每一步添加时间戳
     public static void main(String[] args) {
 
-        //默认文本输入文件位置
-        String txtFilePath = "D:\\test.txt";
+        //当前路径
+        String workingDictionaryPath = System.getProperty("user.dir");
 
         //默认 CSV 文件输入位置
-        String csvFilePath = "D:\\test.csv";
+        String csvFilePath = workingDictionaryPath + "\\test\\test.csv";
 
         //默认书名字典位置
-        String dictionaryFilePath = "D:\\dictionary.csv";
+        String dictionaryFilePath = workingDictionaryPath + "\\test\\dictionary.csv";
 
-        //数据在 Excel 文件中的第几个 sheet，从 0 开始
-        int sheetIndex = 0;
+        //输出文件路径
+        String outputFilePath = workingDictionaryPath + "\\test\\output.txt";
 
         //分隔符
         String inputSeparator = ",";
 
         //FP-Growth 输出分隔符
-        String fpSeperator = " ";
+        String fpSeparator = " ";
 
         //频繁项中间结果
         List<StringBuilder> fpOutput = new ArrayList<>();
@@ -40,7 +41,11 @@ public class Main {
         List<List<String>> fpInput;
 
         //最终结果
-        List<List<String>> result = null;
+        List<List<String>> result;
+
+        printCurrentTime();
+
+        System.out.println(System.getProperty("user.dir"));
 
         /*
         预处理过程
@@ -50,101 +55,40 @@ public class Main {
         /*
         FP-Growth 算法处理
          */
-        FPGrowth fpGrowth = new FPGrowth(4);
-        //List<List<String>> transactions = fpGrowth.loadTransaction("D:\\preProcess.txt");
-        fpGrowth.FPGrowth(fpInput, null, fpOutput);
-        //fpGrowth.FPGrowth(fpInput, null, fpOutput);
-
-        for (StringBuilder line : fpOutput) {
-            System.out.println(line.toString());
-        }
-
-        /*
-        String fpFilePath = "D:\\fpOutput.txt";
-        File fp = new File(fpFilePath);
-        System.out.println("处理完成，开始输出结果");
-        if (fpOutput.size() != 0) {
-            try {
-                fp.createNewFile();
-                BufferedWriter writer = new BufferedWriter(new FileWriter(fp));
-                for (StringBuilder line : fpOutput) {
-                    writer.write(line.toString() + "\n");
-                }
-                writer.flush();
-                writer.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } else {
-            System.out.println("Found nothing.");
-        }
+        FPGrowth fpGrowth = new FPGrowth(3);
+        fpGrowth.getFPOutput(fpInput, null, fpOutput);
 
         /*
         再处理过程
          */
-
-//        try {
-//            String line;
-//            BufferedReader reader = new BufferedReader(new FileReader("D:\\temp.txt"));
-//            while ((line = reader.readLine()) != null) {
-//                fpOutput.add(new StringBuilder(line));
-//            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-/*
-        result = reProcess(dictionaryFilePath, fpSeperator, fpOutput);
-
-        //结果输出
-        String outputFilePath = "D:\\output.txt";
-        File outputFile = new File(outputFilePath);
-        System.out.println("处理完成，开始输出结果");
-        if (result.size() != 0) {
-            try {
-                outputFile.createNewFile();
-                BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
-                for (List<String> line : result) {
-                    for (String item : line) {
-                        writer.write(item + "，");
-                    }
-                    writer.write("\n");
-                }
-                writer.flush();
-                writer.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } else {
-            System.out.println("Found nothing.");
+        if ((result = reProcess(dictionaryFilePath, fpSeparator, fpOutput)) == null) {
+            System.out.println("无法进行再处理过程，程序退出。");
+            System.exit(-1);
         }
 
+        System.out.println("处理完成，开始输出计算结果");
+        /*
+        结果输出
+         */
+        getOutput(outputFilePath, result);
+
         System.out.println("输出完成，程序结束");
-*/
-        //输出读取到的 CSV 文件数据
-//        String outputFilePath = "D:\\output.txt";
-//        File outputFile = new File(outputFilePath);
-//        try {
-//            outputFile.createNewFile();
-//            BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
-//
-//            for (List<String> line : reverse) {
-//                for (String item :
-//                        line) {
-//                    writer.write(item + " ");
-//                }
-//                writer.write(line.toString() + "\n");
-//            }
-//
-//            writer.flush();
-//            writer.close();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+
+        printCurrentTime();
+
+    }
+
+    /**
+     * 打印当前系统时间
+     */
+    private static void printCurrentTime() {
+        System.out.println(new Date());
     }
 
     /**
      * 预处理方法。负责把提供原数据的 csv 文件处理成这个 FP-Growth 算法可以处理的格式。
-     * @param csvFilePath 数据源 csv 文件路径
+     *
+     * @param csvFilePath    数据源 csv 文件路径
      * @param inputSeparator csv 文件中的分隔符
      * @return 可用于 FP-Growth 算法的输入结果
      */
@@ -208,24 +152,28 @@ public class Main {
 
     /**
      * 再处理方法。负责把 FP-Growth 算法输出的数据重整为人类可以阅读的频繁项集。
+     *
      * @param dictionaryFilePath 字典文件路径
-     * @param fpSeperator   FP-Growth 输出中的分隔符
-     * @param fpOutput FP-Growth 的输出结果
+     * @param fpSeparator        FP-Growth 输出中的分隔符
+     * @param fpOutput           FP-Growth 的输出结果
      * @return 再处理结果，可以直接输出
      */
-    private static List<List<String>> reProcess(String dictionaryFilePath, String fpSeperator, List<StringBuilder> fpOutput) {
+    @Nullable
+    private static List<List<String>> reProcess(String dictionaryFilePath, String fpSeparator, List<StringBuilder> fpOutput) {
 
         List<List<String>> result = new ArrayList<>();
 
-        //去除前缀以及逆序后的结果
-        List<List<String>> reverse = new ArrayList<>();
+        //去除前缀后的结果
+        List<List<String>> removedPrefix = new ArrayList<>();
 
+        //去除前缀
         for (StringBuilder line : fpOutput) {
-            List<String> lineList = Arrays.asList(line.toString().substring(line.toString().indexOf("b")).split(fpSeperator));
-            //Collections.sort(lineList);
-            Collections.reverse(lineList);
-            reverse.add(lineList);
+            List<String> lineList = Arrays.asList(line.toString().substring(line.toString().indexOf("b")).split(fpSeparator));
+            removedPrefix.add(lineList);
         }
+
+        //合并与去重
+        getResultFiltered(result, removedPrefix);
 
         //制作字典
         Dictionary<String, String> dictionary = new Hashtable<>();
@@ -247,16 +195,35 @@ public class Main {
         //以文件流的形式读取 CSV 文件时，会把标题行读出来，所以需要去除
         dictionary.remove("图书记录号（种）");
 
+        //替换
+        for (List<String> line : result) {
+            for (int i = 0; i < line.size(); i++) {
+                line.set(i, dictionary.get(line.get(i)));
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * 对 FP-Growth 输出结果进行合并与去重
+     *
+     * @param result  空输出结果集
+     * @param removedPrefix 逆转后的
+     * @return 处理结果
+     */
+    private static List<List<String>> getResultFiltered(List<List<String>> result, List<List<String>> removedPrefix) {
 
         //合并与去重
         List<String> row = new ArrayList<>();
-        HashSet<String> hashSet = null;
+        HashSet<String> hashSet;
 
-        for (int i = 0; i < reverse.size(); i++) {
-            row.addAll(reverse.get(i));
-            for (int j = i + 1; j < reverse.size(); j++) {
-                if (Objects.equals(reverse.get(i).get(0), reverse.get(j).get(0))) {
-                    row.addAll(reverse.get(j));
+        //两个行之间如果有交集，就合并他们
+        for (int i = 0; i < removedPrefix.size(); i++) {
+            row.addAll(removedPrefix.get(i));
+            for (int j = i + 1; j < removedPrefix.size(); j++) {
+                if (isIntersected(row, removedPrefix.get(j))) {
+                    row.addAll(removedPrefix.get(j));
                 } else {
                     i = j - 1;
                     hashSet = new HashSet<>(row);
@@ -268,38 +235,81 @@ public class Main {
             }
         }
 
-        //替换
-        for (List<String> line : result) {
-            for (int i = 0; i < line.size(); i++) {
-                line.set(i, dictionary.get(line.get(i)));
+        return result;
+    }
+
+    /**
+     * 判定两个集合是否有交集。有交集返回 true；没有交集返回 false。
+     * @param a 集合 A
+     * @param b 集合 B
+     * @return 结果
+     */
+    private static boolean isIntersected(List<String> a, List<String> b) {
+
+        List<String> A = new ArrayList<>(a);
+        List<String> B = new ArrayList<>(b);
+
+        return A.retainAll(B);
+
+    }
+
+    /**
+     * 把计算结果输出到指定的文件中
+     *
+     * @param outputFile 指定的输出文件
+     * @param result     计算结果
+     */
+    private static void writeResultToFile(File outputFile, List<List<String>> result) {
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
+            for (List<String> line : result) {
+                for (String item : line) {
+                    writer.write(item + ",");
+                }
+                writer.newLine();
+            }
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 把最终的计算结果输出到文件中
+     *
+     * @param outputFilePath 输出文件路径
+     * @param result         计算结果
+     */
+    private static void getOutput(String outputFilePath, List<List<String>> result) {
+        File outputFile = new File(outputFilePath);
+        if (!outputFile.exists()) {
+            try {
+                if (!outputFile.createNewFile()) {
+                    System.out.println("无法输出计算结果，程序退出");
+                    System.exit(-1);
+                }
+                System.out.println("创建输出文件：" + outputFile.getPath());
+                writeResultToFile(outputFile, result);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            try {
+                if (!outputFile.delete()) {
+                    System.out.println("无法输出计算结果，程序退出");
+                    System.exit(-1);
+                }
+                System.out.println("目标文件已存在，将删除源文件，并创建新的同名文件：" + outputFile.getPath());
+                if (!outputFile.createNewFile()) {
+                    System.out.println("无法输出计算结果，程序退出");
+                    System.exit(-1);
+                }
+                writeResultToFile(outputFile, result);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
-
-
-//        List<List<String>> temp = new ArrayList<>();
-//
-//        row.clear();
-//        if (hashSet != null) {
-//            hashSet.clear();
-//        }
-//
-//        for (int i = 0; i < result.size(); i++) {
-//            row.addAll(result.get(i));
-//            for (int j = i + 1; j < result.size(); j++) {
-//                if (Objects.equals(result.get(i).get(0), result.get(j).get(0))) {
-//                    row.addAll(result.get(j));
-//                } else {
-//                    i = j - 1;
-//                    hashSet = new HashSet<>(row);
-//                    temp.add(new ArrayList<>(hashSet));
-//                    row.clear();
-//                    hashSet.clear();
-//                    break;
-//                }
-//            }
-//        }
-
-        return result;
     }
 
 }
