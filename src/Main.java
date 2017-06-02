@@ -32,10 +32,10 @@ public class Main {
         String inputSeparator = ",";
 
         //FP-Growth 输出分隔符
-        String fpSeparator = " ";
+        String fpSeparator = ",";
 
         //频繁项中间结果
-        List<StringBuilder> fpOutput = new ArrayList<>();
+        List<List<String>> fpOutput = new ArrayList<>();
 
         //CSV 输入结果
         List<List<String>> fpInput;
@@ -50,12 +50,12 @@ public class Main {
         /*
         预处理过程
          */
-        fpInput = preProcess(csvFilePath, inputSeparator);
+        fpInput = preProcess(csvFilePath, inputSeparator, 'B');
 
         /*
         FP-Growth 算法处理
          */
-        FPGrowth fpGrowth = new FPGrowth(3);
+        FPGrowth fpGrowth = new FPGrowth(1);
         fpGrowth.getFPOutput(fpInput, null, fpOutput);
 
         /*
@@ -92,7 +92,8 @@ public class Main {
      * @param inputSeparator csv 文件中的分隔符
      * @return 可用于 FP-Growth 算法的输入结果
      */
-    private static List<List<String>> preProcess(String csvFilePath, String inputSeparator) {
+    @Nullable
+    private static List<List<String>> preProcess(String csvFilePath, String inputSeparator, char targetClass) {
 
         List<List<String>> csvInput = new ArrayList<>();
 
@@ -116,22 +117,31 @@ public class Main {
             e.printStackTrace();
             return null;
         }
+        //去除 CSV 文件中的标题行
+        csvInput.remove(0);
 
-        //去除只有一项的行，然后合并属于同一次借书操作的连续几行记录
+        //筛选出符合类别要求的记录项
+        List<List<String>> result = new ArrayList<>();
+        for (List<String> aCsvInput : csvInput) {
+            if ((aCsvInput.size() == 3) && aCsvInput.get(2).charAt(0) == targetClass) {
+                result.add(aCsvInput);
+            }
+        }
+
         List<String> merged = new ArrayList<>();
         List<List<String>> FPInput = new ArrayList<>();
         int i;
         int j;
-        int inputItemCount = csvInput.size();
+        int inputItemCount = result.size();
 
         System.out.println("CSV 文件读取完毕，开始预处理过程");
 
-        //由于以二进制方式读取的数据会含有标题行，故下标从 1 开始
-        for (i = 1; i < inputItemCount; i++) {
-            merged.add(csvInput.get(i).get(1));
+        //读取数据并合并同一次结束记录的连续几行记录
+        for (i = 0; i < inputItemCount; i++) {
+            merged.add(result.get(i).get(1));
             for (j = i; j < inputItemCount - 1; j++) {
-                if (Objects.equals(csvInput.get(j).get(0), csvInput.get(j + 1).get(0))) {
-                    merged.add(csvInput.get(j + 1).get(1));
+                if (Objects.equals(result.get(j).get(0), result.get(j + 1).get(0))) {
+                    merged.add(result.get(j + 1).get(1));
                 } else {
                     break;
                 }
@@ -139,6 +149,7 @@ public class Main {
             i = j;
             if (merged.size() == 1) {
                 merged.clear();
+                continue;
             }
             Collections.sort(merged);
             //note: add() 是否是引用式的添加，还是复制式的添加？
@@ -151,7 +162,7 @@ public class Main {
     }
 
     /**
-     * 再处理方法。负责把 FP-Growth 算法输出的数据重整为人类可以阅读的频繁项集。
+     * 再处理方法。负责把 FP-Growth 算法输出的数据重整为人类可以阅读的频繁项集结果序列。
      *
      * @param dictionaryFilePath 字典文件路径
      * @param fpSeparator        FP-Growth 输出中的分隔符
@@ -159,30 +170,20 @@ public class Main {
      * @return 再处理结果，可以直接输出
      */
     @Nullable
-    private static List<List<String>> reProcess(String dictionaryFilePath, String fpSeparator, List<StringBuilder> fpOutput) {
+    private static List<List<String>> reProcess(String dictionaryFilePath, String fpSeparator, List<List<String>> fpOutput) {
 
         List<List<String>> result = new ArrayList<>();
 
-        //去除前缀后的结果
-        List<List<String>> removedPrefix = new ArrayList<>();
-
-        //去除前缀
-        for (StringBuilder line : fpOutput) {
-            List<String> lineList = Arrays.asList(line.toString().substring(line.toString().indexOf("b")).split(fpSeparator));
-            removedPrefix.add(lineList);
-        }
-
-        //合并与去重
-        getResultFiltered(result, removedPrefix);
-
         //制作字典
         Dictionary<String, String> dictionary = new Hashtable<>();
-
+        int temp = 0;
         try {
             String line;
             BufferedReader reader = new BufferedReader(new FileReader(dictionaryFilePath));
             while ((line = reader.readLine()) != null) {
-                List<String> dictionaryLine = Arrays.asList(line.split(","));
+                temp++;
+                //fixme: dictionary 中还没能添加 b3589980 的键值对
+                List<String> dictionaryLine = Arrays.asList(line.split(fpSeparator));
                 if (dictionaryLine.size() == 2) {
                     dictionary.put(dictionaryLine.get(0), dictionaryLine.get(1));
                 }
@@ -191,16 +192,27 @@ public class Main {
             e.printStackTrace();
             return null;
         }
-
         //以文件流的形式读取 CSV 文件时，会把标题行读出来，所以需要去除
         dictionary.remove("图书记录号（种）");
 
+        //合并与去重
+        getResultFiltered(result, fpOutput);
+
         //替换
-        for (List<String> line : result) {
-            for (int i = 0; i < line.size(); i++) {
-                line.set(i, dictionary.get(line.get(i)));
+//        for (List<String> line : result) {
+//            for (int i = 0; i < line.size(); i++) {
+//                line.set(i, dictionary.get(line.get(i)));
+//            }
+//        }
+        for (int i = 0; i < result.size(); i++) {
+            List<String> line = result.get(i);
+            for (int j = 0; j < line.size(); j++) {
+                line.set(j, dictionary.get(line.get(j)));
             }
+            result.set(i, line);
         }
+
+        writeResultToFile(new File("E:\\replece.txt"), result);
 
         return result;
     }
@@ -215,24 +227,28 @@ public class Main {
     private static List<List<String>> getResultFiltered(List<List<String>> result, List<List<String>> removedPrefix) {
 
         //合并与去重
-        List<String> row = new ArrayList<>();
+        List<String> newRow = new ArrayList<>();
         HashSet<String> hashSet;
 
-        //两个行之间如果有交集，就合并他们
-        for (int i = 0; i < removedPrefix.size(); i++) {
-            row.addAll(removedPrefix.get(i));
-            for (int j = i + 1; j < removedPrefix.size(); j++) {
-                if (isIntersected(row, removedPrefix.get(j))) {
-                    row.addAll(removedPrefix.get(j));
-                } else {
-                    i = j - 1;
-                    hashSet = new HashSet<>(row);
-                    result.add(new ArrayList<>(hashSet));
-                    row.clear();
-                    hashSet.clear();
-                    break;
+        int elementLeft = removedPrefix.size();
+
+        //任意两行之间如果有交集，就合并他们
+        while (removedPrefix.size() != 0) {
+            newRow.addAll(removedPrefix.get(0));
+            for (int j = 1; j < elementLeft - 1; j++) {
+                if (isIntersected(newRow, removedPrefix.get(j))) {
+                    newRow.addAll(removedPrefix.get(j));
+                    removedPrefix.remove(j);
+                    elementLeft--;
+                    j--;
                 }
             }
+            hashSet = new HashSet<>(newRow);
+            result.add(new ArrayList<>(hashSet));
+            newRow.clear();
+            hashSet.clear();
+            elementLeft--;
+            removedPrefix.remove(0);
         }
 
         return result;
@@ -246,10 +262,14 @@ public class Main {
      */
     private static boolean isIntersected(List<String> a, List<String> b) {
 
-        List<String> A = new ArrayList<>(a);
-        List<String> B = new ArrayList<>(b);
-
-        return A.retainAll(B);
+        for (String anA : a) {
+            for (String aB : b) {
+                if (anA.equals(aB)) {
+                    return true;
+                }
+            }
+        }
+        return false;
 
     }
 

@@ -24,7 +24,7 @@ public class FPGrowth {
      * @param fpOutput     计算结果集
      * @return 计算结果
      */
-    public List<StringBuilder> getFPOutput(List<List<String>> transactions, List<String> postPattern, List<StringBuilder> fpOutput) {
+    public List<StringBuilder> getFPOutput(List<List<String>> transactions, List<String> postPattern, List<List<String>> fpOutput) {
 
         //构建头项表
         List<TNode> headerTable = buildHeaderTable(transactions);
@@ -40,11 +40,11 @@ public class FPGrowth {
         if (postPattern != null) {
             for (TNode head : headerTable) {
                 StringBuilder line = new StringBuilder();
-                line.append(head.getCount()).append(" ").append(head.getItemName());
+                line.append(head.getItemName());
                 for (String item : postPattern) {
                     line.append(" ").append(item);
                 }
-                fpOutput.add(line);
+                fpOutput.add(Arrays.asList(line.toString().split(" ")));
             }
         }
 
