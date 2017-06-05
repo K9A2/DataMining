@@ -55,8 +55,10 @@ public class Main {
         /*
         FP-Growth 算法处理
          */
-        FPGrowth fpGrowth = new FPGrowth(1);
+        FPGrowth fpGrowth = new FPGrowth(2);
         fpGrowth.getFPOutput(fpInput, null, fpOutput);
+
+        System.out.println("开始再处理");
 
         /*
         再处理过程
@@ -199,11 +201,6 @@ public class Main {
         getResultFiltered(result, fpOutput);
 
         //替换
-//        for (List<String> line : result) {
-//            for (int i = 0; i < line.size(); i++) {
-//                line.set(i, dictionary.get(line.get(i)));
-//            }
-//        }
         for (int i = 0; i < result.size(); i++) {
             List<String> line = result.get(i);
             for (int j = 0; j < line.size(); j++) {
@@ -229,24 +226,26 @@ public class Main {
         //合并与去重
         List<String> newRow = new ArrayList<>();
         HashSet<String> hashSet;
+        HashSet<String> temp = new HashSet<>();
 
         int elementLeft = removedPrefix.size();
 
         //任意两行之间如果有交集，就合并他们
         while (removedPrefix.size() != 0) {
-            newRow.addAll(removedPrefix.get(0));
+//            newRow.addAll(removedPrefix.get(0));
+            temp.addAll(removedPrefix.get(0));
             for (int j = 1; j < elementLeft - 1; j++) {
-                if (isIntersected(newRow, removedPrefix.get(j))) {
-                    newRow.addAll(removedPrefix.get(j));
+                if (isIntersected(temp, removedPrefix.get(j))) {
+                    temp.addAll(removedPrefix.get(j));
                     removedPrefix.remove(j);
                     elementLeft--;
                     j--;
                 }
             }
-            hashSet = new HashSet<>(newRow);
-            result.add(new ArrayList<>(hashSet));
-            newRow.clear();
-            hashSet.clear();
+//            hashSet = new HashSet<>(newRow);
+            result.add(new ArrayList<>(temp));
+//            newRow.clear();
+            temp.clear();
             elementLeft--;
             removedPrefix.remove(0);
         }
@@ -260,7 +259,7 @@ public class Main {
      * @param b 集合 B
      * @return 结果
      */
-    private static boolean isIntersected(List<String> a, List<String> b) {
+    private static boolean isIntersected(HashSet<String> a, List<String> b) {
 
         for (String anA : a) {
             for (String aB : b) {
