@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.stormlin.fpgrowth.ProcessingUtils.*;
+import static com.stormlin.kmeans.KMeans.KMeans;
 
 /**
  * @Author stormlin
@@ -17,6 +18,21 @@ public class Main {
 
     public static void main(String[] args) {
 
+        //fpgrowth();
+        kmeans();
+    }
+
+    /**
+     * 数据挖掘算法 K-Means 部分
+     */
+    private static void kmeans() {
+        KMeans(3);
+    }
+
+    /**
+     * 数据挖掘算法 FP-Growth 部分
+     */
+    private static void fpgorwth() {
         //当前路径
         String workingDictionaryPath = System.getProperty("user.dir");
 
@@ -81,7 +97,6 @@ public class Main {
         System.out.println("输出完成，程序结束");
 
         printCurrentTime();
-
     }
 
 }

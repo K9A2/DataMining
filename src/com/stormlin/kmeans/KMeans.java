@@ -1,5 +1,9 @@
 package com.stormlin.kmeans;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Random;
+
 /**
  * 用于聚类分析的 K-Means 算法。
  *
@@ -10,7 +14,7 @@ package com.stormlin.kmeans;
  */
 public class KMeans {
 
-    public static void show() {
+    public static void KMeans(int classCount) {
 
         //输入数据
         double[][] input = {
@@ -33,17 +37,49 @@ public class KMeans {
         //基准样本点
         double[] A = {0.3, 0, 0.19};
         double[] B = {0.7, 0.76, 0.5};
-        double[] C = {1,1,0.5};
+        double[] C = {1, 1, 0.5};
+
+        int[] rands = getUnrepeatedRandomNumbers(1, 17, 10);
 
         //规格化
-        getInputNormalized(input);
+        //getInputNormalized(input);
 
         //重复计算直至收敛
 
     }
 
     /**
+     * 计算 [min, max] 范围内不重复的 n 个随机数
+     *
+     * @param min   范围最小值
+     * @param max   范围最大值
+     * @param count 所需随机数个数
+     * @return 不重复的随机数数组
+     */
+    private static int[] getUnrepeatedRandomNumbers(int min, int max, int count) {
+
+        int[] result = new int[count];
+        int i = 0;
+        HashSet<Integer> temp = new HashSet<>();
+
+        while (true) {
+            if (temp.size() == 3) {
+                break;
+            }
+            temp.add((int) (Math.random() * (max - min)) + min);
+        }
+
+        for (Integer item : temp) {
+            result[i] = item;
+        }
+
+        return result;
+
+    }
+
+    /**
      * 计算 a，b 之间的欧几里得距离
+     *
      * @param a 第一个数
      * @param b 第二个数
      * @return 两数之间的欧几里得距离
@@ -63,6 +99,7 @@ public class KMeans {
 
     /**
      * 按列规格化输入数组
+     *
      * @param input 未规格化的数组
      * @return 规格化结果
      */
