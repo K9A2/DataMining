@@ -6,7 +6,6 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
@@ -41,11 +40,11 @@ public class KMeans {
         }
 
         //新旧两个质心数组
-        Point[] oldClusterCenter = new Point[points.size()];
-        Point[] newClusterCenter = new Point[points.size()];
+        Point[] oldClusterCenter;
+        Point[] newClusterCenter;
 
-        oldClusterCenter = getArrayCopy(oldClusterCenter, randomClusterCenter);
-        newClusterCenter = getArrayCopy(newClusterCenter, randomClusterCenter);
+        oldClusterCenter = getArrayCopy(randomClusterCenter);
+        newClusterCenter = getArrayCopy(randomClusterCenter);
 
         //两点之间的欧几里得距离
         double[][] distance = new double[points.size()][K];
@@ -55,10 +54,10 @@ public class KMeans {
             for (int i = 0; i < points.size(); i++) {
                 //计算
                 for (int k = 0; k < K; k++) {
-                    distance[i][k] = getEuclidDistance(points.get(i), newClusterCenter[k]);
+                    distance[i][k] = getEuclidDistance(points.get(i), oldClusterCenter[k]);
                 }
-                //分类
                 double min = distance[i][0];
+                //分类
                 for (int k = 0; k < K; k++) {
                     if (distance[i][k] < min) {
                         min = distance[i][k];
@@ -72,16 +71,41 @@ public class KMeans {
             //重新计算每一类的质心
             for (int k = 0; k < K; k++) {
                 newClusterCenter[k] = getClusterCenter(result.get(k));
-                result.set(k, new ArrayList<>());
             }
             //质心不再移动则退出
-            if (Arrays.equals(oldClusterCenter, newClusterCenter)) {
+            if (!isClusterCenterChanged(oldClusterCenter, newClusterCenter)) {
                 break;
             }
-            oldClusterCenter = getArrayCopy(oldClusterCenter, newClusterCenter);
+            for (int k = 0; k < K; k++) {
+                result.set(k, new ArrayList<>());
+            }
+            oldClusterCenter = getArrayCopy(newClusterCenter);
         }
 
         return result;
+    }
+
+    /**
+     * 判断质心是否移动
+     *
+     * @param a 质心数组 a
+     * @param b 质心数组 b
+     * @return 如果移动，则返回 true；否则返回 false
+     */
+    private static boolean isClusterCenterChanged(Point[] a, Point[] b) {
+
+        for (int i = 0; i < a.length; i++) {
+            if (a[i].getX() != b[i].getX()) {
+                return true;
+            } else if (a[i].getY() != b[i].getY()) {
+                return true;
+            } else if (a[i].getZ() != b[i].getZ()) {
+                return true;
+            }
+        }
+
+        return false;
+
     }
 
     /**
@@ -94,6 +118,10 @@ public class KMeans {
         if (points.size() == 0) {
             return null;
         }
+        if (points.size() == 1) {
+            return new Point(points.get(0).getX(), points.get(0).getY(), points.get(0).getZ());
+        }
+
         double x = 0;
         double y = 0;
         double z = 0;
@@ -113,12 +141,13 @@ public class KMeans {
     /**
      * 获得数组 b 的拷贝
      *
-     * @param a 数组 a
      * @param b 数组 b
      * @return 数组 b 的拷贝
      */
     @Nullable
-    private static Point[] getArrayCopy(Point[] a, Point[] b) {
+    private static Point[] getArrayCopy(Point[] b) {
+
+        Point[] a = new Point[b.length];
 
         if (a.length == 0 || b.length == 0) {
             return null;
@@ -214,14 +243,14 @@ public class KMeans {
     /**
      * 把计算结果输出到文件中
      *
-     * @param result   计算结果
+     * @param result 计算结果
      */
     private static void dumpToFile(List<List<Point>> result) {
 
         String outputFilePath = System.getProperty("user.dir") + "\\test\\output.txt";
 
         try {
-            BufferedWriter writer = new BufferedWriter(new FileWriter(outputFilePath));
+            BufferedWriter writer = new BufferedWriter(new FileWriter(outputFilePath, true));
             for (List<Point> line : result) {
                 for (Point item : line) {
                     writer.write(item.getName() + ",");
