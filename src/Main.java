@@ -1,10 +1,11 @@
 import com.stormlin.fpgrowth.FPGrowth;
+import com.stormlin.kmeans.Point;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.stormlin.fpgrowth.ProcessingUtils.*;
-import static com.stormlin.kmeans.KMeans.KMeans;
+import static com.stormlin.kmeans.KMeans.Analyze;
 
 /**
  * @Author stormlin
@@ -18,15 +19,46 @@ public class Main {
 
     public static void main(String[] args) {
 
-        //fpgrowth();
-        kmeans();
-    }
+        //输入数据
+        double[][] input = {
+                {0.29, 1, 1},
+                {0.29, 0.18, 0.58},
+                {0.12, 0.3, 0.54},
+                {1, 1, 1},
+                {0.06, 0.42, 0.6},
+                {0.53, 0.64, 0.8},
+                {0.24, 1, 0.8},
+                {1, 1, 1},
+                {0.29, 0.8, 0.56},
+                {0.53, 0.8, 1},
+                {0.18, 0.8, 1},
+                {0.8, 0.8, 0.8},
+                {0.29, 0.8, 0.8},
+                {0.53, 0.8, 1},
+                {0.53, 1, 0.8},
+                {0.53, 1, 0.8}
+        };
 
-    /**
-     * 数据挖掘算法 K-Means 部分
-     */
-    private static void kmeans() {
-        KMeans(3);
+        String[] names = {"中国", "日本", "韩国", "印尼", "澳大利亚", "朝鲜", "伊拉克", "泰国", "伊朗", "沙特", "阿联酋"
+                , "卡塔尔", "乌兹别克斯坦", "巴林", "阿曼", "约旦"};
+
+        List<Point> points = new ArrayList<>(input.length);
+
+        for (int i = 0; i < input.length; i++) {
+            Point newPoint = new Point(input[i][0], input[i][1], input[i][2]);
+            newPoint.setName(names[i]);
+            newPoint.setClassID(0);
+            points.add(newPoint);
+        }
+
+        List<List<Point>> result = Analyze(points, 3);
+        for (List<Point> aResult : result) {
+            for (Point anAResult : aResult) {
+                System.out.print(anAResult.getName() + " ");
+            }
+            System.out.println();
+        }
+
     }
 
     /**
