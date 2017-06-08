@@ -22,9 +22,8 @@ public class FPGrowth {
      * @param transactions 待处理的事物集
      * @param postPattern  累积的前缀模式基
      * @param fpOutput     计算结果集
-     * @return 计算结果
      */
-    public List<StringBuilder> getFPOutput(List<List<String>> transactions, List<String> postPattern, List<List<String>> fpOutput) {
+    public void getFPOutput(List<List<String>> transactions, List<String> postPattern, List<List<String>> fpOutput) {
 
         //构建头项表
         List<TNode> headerTable = buildHeaderTable(transactions);
@@ -33,7 +32,7 @@ public class FPGrowth {
 
         //当树为空时退出
         if (tree.getChildren() == null || tree.getChildren().size() == 0) {
-            return null;
+            return;
         }
 
         //输出频繁项集
@@ -81,8 +80,6 @@ public class FPGrowth {
             //每个头项表节点重复上述所有操作，递归
             getFPOutput(newTransaction, newPostPattern, fpOutput);
         }
-
-        return null;
 
     }
 
