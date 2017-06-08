@@ -100,13 +100,13 @@ public class ProcessingUtils {
     /**
      * 再处理方法。负责把 FP-Growth 算法输出的数据重整为人类可以阅读的频繁项集结果序列。
      *
-     * @param dictionaryFilePath 字典文件路径
-     * @param fpSeparator        FP-Growth 输出中的分隔符
-     * @param fpOutput           FP-Growth 的输出结果
+     * @param dictionaryFilePath  字典文件路径
+     * @param dictionarySeparator FP-Growth 输出中的分隔符
+     * @param fpOutput            FP-Growth 的输出结果
      * @return 再处理结果，可以直接输出
      */
     @Nullable
-    public static List<List<String>> reProcess(String dictionaryFilePath, String fpSeparator, List<List<String>> fpOutput) {
+    public static List<List<String>> reProcess(String dictionaryFilePath, String dictionarySeparator, List<List<String>> fpOutput) {
 
         List<List<String>> result = new ArrayList<>();
 
@@ -117,7 +117,7 @@ public class ProcessingUtils {
             BufferedReader reader = new BufferedReader(new FileReader(dictionaryFilePath));
             while ((line = reader.readLine()) != null) {
                 //fixme: dictionary 中还没能添加 b3589980 的键值对
-                List<String> dictionaryLine = Arrays.asList(line.split(fpSeparator));
+                List<String> dictionaryLine = Arrays.asList(line.split(dictionarySeparator));
                 if (dictionaryLine.size() == 2) {
                     dictionary.put(dictionaryLine.get(0), dictionaryLine.get(1));
                 }
@@ -149,23 +149,23 @@ public class ProcessingUtils {
     /**
      * 对 FP-Growth 输出结果进行合并与去重
      *
-     * @param result        空输出结果集
-     * @param removedPrefix 逆转后的
+     * @param result   空输出结果集
+     * @param fpOutput 逆转后的
      */
-    private static void getResultFiltered(List<List<String>> result, List<List<String>> removedPrefix) {
+    private static void getResultFiltered(List<List<String>> result, List<List<String>> fpOutput) {
 
         //合并与去重
         HashSet<String> temp = new HashSet<>();
 
-        int elementLeft = removedPrefix.size();
+        int elementLeft = fpOutput.size();
 
         //任意两行之间如果有交集，就合并他们
-        while (removedPrefix.size() != 0) {
-            temp.addAll(removedPrefix.get(0));
+        while (fpOutput.size() != 0) {
+            temp.addAll(fpOutput.get(0));
             for (int j = 1; j < elementLeft - 1; j++) {
-                if (isIntersected(temp, removedPrefix.get(j))) {
-                    temp.addAll(removedPrefix.get(j));
-                    removedPrefix.remove(j);
+                if (isIntersected(temp, fpOutput.get(j))) {
+                    temp.addAll(fpOutput.get(j));
+                    fpOutput.remove(j);
                     elementLeft--;
                     j--;
                 }
@@ -173,7 +173,7 @@ public class ProcessingUtils {
             result.add(new ArrayList<>(temp));
             temp.clear();
             elementLeft--;
-            removedPrefix.remove(0);
+            fpOutput.remove(0);
         }
 
     }
