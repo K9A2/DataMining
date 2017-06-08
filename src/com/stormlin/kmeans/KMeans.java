@@ -173,7 +173,7 @@ public class KMeans {
         HashSet<Integer> temp = new HashSet<>();
 
         while (true) {
-            if (temp.size() == 3) {
+            if (temp.size() == count) {
                 break;
             }
             temp.add((int) (Math.random() * (max - min)) + min);
