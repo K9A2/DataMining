@@ -186,7 +186,6 @@ public class ProcessingUtils {
      * @return 结果
      */
     private static boolean isIntersected(HashSet<String> a, List<String> b) {
-
         for (String anA : a) {
             for (String aB : b) {
                 if (anA.equals(aB)) {
@@ -195,7 +194,6 @@ public class ProcessingUtils {
             }
         }
         return false;
-
     }
 
     /**

@@ -19,6 +19,15 @@ public class Main {
 
     public static void main(String[] args) {
 
+        //kmeans();
+        fpgorwth();
+
+    }
+
+    /**
+     * 数据挖掘算法 K-Means 部分
+     */
+    private static void kmeans() {
         //输入数据
         double[][] input = {
                 {0.29, 1, 1},
@@ -58,7 +67,6 @@ public class Main {
             }
             System.out.println();
         }
-
     }
 
     /**
